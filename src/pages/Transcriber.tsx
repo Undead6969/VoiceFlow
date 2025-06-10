@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,13 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ApiSettings } from '@/components/ApiSettings';
 import { RecordingVisualizer } from '@/components/RecordingVisualizer';
 import { generateSummary } from '@/services/aiSummaryService';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft } from 'lucide-react';
 
 interface TranscriptSegment {
   text: string;
@@ -31,22 +30,24 @@ interface Summary {
   conclusion: string;
 }
 
-const Index = () => {
+const Transcriber = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
   const [notes, setNotes] = useState('');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [isNotesEnabled, setIsNotesEnabled] = useState(false);
   const [meetingTitle, setMeetingTitle] = useState('');
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [apiKey, setApiKey] = useState('AIzaSyB73ozhhHZpLJEvSvktnEMgjRBv8hfhEng');
+  const [model, setModel] = useState('gemini-2.0-flash');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   const { toast } = useToast();
 
@@ -85,7 +86,6 @@ const Index = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioStreamRef.current = stream;
       
-      // Initialize speech recognition
       if ('webkitSpeechRecognition' in window) {
         const recognition = new (window as any).webkitSpeechRecognition();
         recognition.continuous = true;
@@ -190,7 +190,6 @@ const Index = () => {
     setCurrentTime(0);
     setRecordingStartTime(null);
 
-    // Generate summary
     if (transcript.length > 0) {
       await generateMeetingSummary();
     }
@@ -204,7 +203,7 @@ const Index = () => {
   const generateMeetingSummary = async () => {
     setIsGeneratingSummary(true);
     try {
-      const summaryData = await generateSummary(transcript, notes);
+      const summaryData = await generateSummary(transcript, notes, apiKey, model);
       setSummary(summaryData);
       setMeetingTitle(summaryData.title);
       
@@ -216,7 +215,7 @@ const Index = () => {
       console.error('Error generating summary:', error);
       toast({
         title: "Summary Error",
-        description: "Could not generate summary. Please try again.",
+        description: "Could not generate summary. Please check your API settings.",
         variant: "destructive"
       });
     } finally {
@@ -229,13 +228,19 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
-              <Mic className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold gradient-text">VoiceFlow</h1>
-              <p className="text-xs text-muted-foreground">AI Meeting Transcriber</p>
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
+                <Mic className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold gradient-text">VoiceFlow</h1>
+                <p className="text-xs text-muted-foreground">AI Meeting Transcriber</p>
+              </div>
             </div>
           </div>
           
@@ -246,15 +251,21 @@ const Index = () => {
                 <span className="font-mono">{formatTime(currentTime)}</span>
               </div>
             )}
+            <ApiSettings 
+              apiKey={apiKey}
+              model={model}
+              onApiKeyChange={setApiKey}
+              onModelChange={setModel}
+            />
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 max-w-6xl">
         {/* Meeting Title */}
         {meetingTitle && (
-          <div className="mb-6">
+          <div className="mb-6 animate-fade-in">
             <h2 className="text-2xl font-bold text-foreground">{meetingTitle}</h2>
             <p className="text-muted-foreground">Generated automatically</p>
           </div>
@@ -266,7 +277,7 @@ const Index = () => {
             <div className="flex flex-col space-y-4">
               <RecordingVisualizer isRecording={isRecording && !isPaused} audioStream={audioStreamRef.current || undefined} />
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-center">
                 <div className="flex items-center space-x-4">
                   {!isRecording ? (
                     <Button onClick={startRecording} size="lg" className="bg-primary hover:bg-primary/90">
@@ -293,15 +304,6 @@ const Index = () => {
                     </div>
                   )}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="notes-mode"
-                    checked={isNotesEnabled}
-                    onCheckedChange={setIsNotesEnabled}
-                  />
-                  <Label htmlFor="notes-mode" className="text-sm">Enable Notes</Label>
-                </div>
               </div>
             </div>
           </CardContent>
@@ -309,17 +311,17 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="transcription" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="transcription" className="flex items-center space-x-2">
               <FileText className="w-4 h-4" />
               <span>Live Transcription</span>
             </TabsTrigger>
-            <TabsTrigger value="notes" disabled={!isNotesEnabled}>
+            <TabsTrigger value="notes">
               <span>Notes</span>
             </TabsTrigger>
-            <TabsTrigger value="summary" disabled={!summary}>
+            <TabsTrigger value="summary" disabled={!summary && !isGeneratingSummary}>
               <Brain className="w-4 h-4" />
-              <span>Summary</span>
+              <span>AI Summary</span>
             </TabsTrigger>
           </TabsList>
 
@@ -341,7 +343,7 @@ const Index = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {transcript.map((segment, index) => (
+                      {transcript.map((segment) => (
                         <div key={segment.id} className="flex space-x-3 p-3 rounded-lg bg-muted/50">
                           <Badge variant="outline" className="shrink-0 font-mono text-xs">
                             {Math.floor(segment.timestamp / 60)}:{(Math.floor(segment.timestamp) % 60).toString().padStart(2, '0')}
@@ -363,7 +365,7 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder="Take notes during the meeting..."
+                  placeholder="Take notes during the meeting... These will be included in the AI summary."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="min-h-96 resize-none"
@@ -385,7 +387,7 @@ const Index = () => {
               ) : summary ? (
                 <>
                   {/* Overview */}
-                  <Card>
+                  <Card className="animate-fade-in">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Target className="w-5 h-5" />
@@ -398,7 +400,7 @@ const Index = () => {
                   </Card>
 
                   {/* Key Points */}
-                  <Card>
+                  <Card className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Lightbulb className="w-5 h-5" />
@@ -418,7 +420,7 @@ const Index = () => {
                   </Card>
 
                   {/* Time-based Insights */}
-                  <Card>
+                  <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Clock className="w-5 h-5" />
@@ -438,7 +440,7 @@ const Index = () => {
                   </Card>
 
                   {/* Conclusion */}
-                  <Card>
+                  <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
                     <CardHeader>
                       <CardTitle>Conclusion & Next Steps</CardTitle>
                     </CardHeader>
@@ -464,4 +466,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Transcriber;

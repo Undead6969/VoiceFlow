@@ -1,209 +1,183 @@
 
 # VoiceFlow - AI Meeting Transcriber
 
-A modern, AI-powered meeting transcription app with live audio recording, real-time transcription, intelligent note-taking, and comprehensive meeting summaries powered by Google Gemini AI.
+VoiceFlow is a modern web application that provides live audio transcription with AI-powered meeting summaries and intelligent note-taking capabilities.
 
-![VoiceFlow Logo](https://img.shields.io/badge/VoiceFlow-AI%20Transcriber-7c3aed?style=for-the-badge)
+## Features
 
-## ✨ Features
-
-### 🎤 Live Audio Recording
-- Real-time audio capture with visual feedback
-- Recording controls (Start, Pause, Resume, Stop)
-- Live audio visualization with frequency analysis
-- Timer display showing recording duration
-
-### 📝 Live Transcription
+### 🎙️ Live Transcription
 - Real-time speech-to-text conversion
-- Timestamped transcript segments
-- Browser-based speech recognition (Chrome/Edge)
-- Automatic punctuation and formatting
+- High accuracy with automatic punctuation
+- Timestamp tracking for every transcript segment
+- Pause and resume functionality
 
 ### 🧠 AI-Powered Summaries
 - Automatic meeting title generation
 - Comprehensive meeting overview
-- Key discussion points extraction
+- Key points extraction
 - Time-based insights and analysis
 - Actionable conclusions and next steps
 - Powered by Google Gemini AI
 
-### 📔 Intelligent Note-Taking
-- Optional note-taking during recording
-- Notes integration with AI summary generation
-- Real-time note synchronization
+### 📝 Smart Note-Taking
+- Take notes while recording
+- Notes are integrated into AI summary generation
+- Persistent note storage during sessions
 
-### 🎨 Modern Design
-- Beautiful, Notion-inspired interface
-- Dark/Light theme toggle with system preference detection
-- Responsive design for all devices
-- Smooth animations and micro-interactions
-- Glass morphism effects and gradients
+### 🎨 Modern Interface
+- Beautiful, responsive design
+- Dark/Light theme support
+- Smooth animations and transitions
+- Glass morphism effects
+- Mobile-friendly layout
 
-## 🚀 Tech Stack
+### ⚙️ Configurable AI Settings
+- Switch between different Gemini models
+- Custom API key configuration
+- Model selection (Gemini 2.0 Flash, Gemini Pro, etc.)
 
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Audio**: Web Audio API + MediaRecorder API
-- **Speech Recognition**: Web Speech API (webkitSpeechRecognition)
-- **AI**: Google Gemini Pro API
+## Technology Stack
+
+- **Frontend**: React 18 with TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **UI Components**: Shadcn/ui component library
+- **Audio Processing**: Web Audio API with real-time visualization
+- **Speech Recognition**: Web Speech API
+- **AI Integration**: Google Gemini API
+- **Routing**: React Router v6
+- **State Management**: React hooks
 - **Build Tool**: Vite
-- **State Management**: React Hooks
-- **Icons**: Lucide React
 
-## 🛠️ Installation & Setup
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Modern browser with microphone access
-- Google Gemini API key (included in the project)
+- Node.js 18+ and npm/yarn
+- Google Gemini API key
+- Modern web browser with microphone access
 
-### Getting Started
+### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd voiceflow-transcriber
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser**
-   Navigate to `http://localhost:8080` and grant microphone permissions when prompted.
-
-## 🎯 How to Use
-
-### Recording a Meeting
-
-1. **Start Recording**: Click the "Start Recording" button to begin
-2. **Live Transcription**: Watch real-time transcription appear as you speak
-3. **Take Notes** (Optional): Enable notes mode and write additional context
-4. **Control Recording**: Use Pause/Resume or Stop as needed
-5. **Generate Summary**: Summary automatically generates when recording stops
-
-### Understanding the Interface
-
-#### Live Transcription Tab
-- Real-time speech-to-text with timestamps
-- Visual audio waveform display
-- Scrollable transcript history
-
-#### Notes Tab
-- Free-form text area for meeting notes
-- Integrates with AI summary generation
-- Available when notes mode is enabled
-
-#### Summary Tab
-- **Meeting Overview**: AI-generated meeting summary
-- **Key Points**: Important discussion topics and decisions
-- **Timeline Insights**: Time-specific insights and highlights
-- **Conclusion**: Action items and next steps
-
-### Recording Controls
-
-- **🎤 Start Recording**: Begin new meeting transcription
-- **⏸️ Pause**: Temporarily stop transcription (resume available)
-- **▶️ Resume**: Continue paused recording
-- **⏹️ Stop**: End recording and generate AI summary
-
-## 🔧 Configuration
-
-### API Keys
-The Google Gemini API key is pre-configured in the application. For production use, consider:
-- Moving API keys to environment variables
-- Implementing server-side API calls for security
-- Setting up proper authentication and rate limiting
-
-### Browser Compatibility
-- **Chrome/Chromium**: Full feature support
-- **Edge**: Full feature support
-- **Firefox**: Limited (no speech recognition)
-- **Safari**: Limited (no speech recognition)
-
-## 🎨 Design Philosophy
-
-VoiceFlow follows modern design principles inspired by Notion and other contemporary productivity tools:
-
-- **Minimalism**: Clean, distraction-free interface
-- **Accessibility**: High contrast ratios and keyboard navigation
-- **Responsiveness**: Works seamlessly across devices
-- **Performance**: Optimized for smooth interactions
-- **User Experience**: Intuitive workflows and clear feedback
-
-## 📊 Features in Detail
-
-### AI Summary Generation
-The AI summary includes:
-- **Auto-generated titles** based on meeting content
-- **Overview summaries** with key takeaways
-- **Organized key points** for quick reference
-- **Time-based insights** showing what happened when
-- **Actionable conclusions** with next steps
-
-### Audio Processing
-- Real-time audio visualization using Web Audio API
-- Automatic gain control and noise reduction
-- Visual feedback during recording and playback
-- Secure local processing (audio never leaves your browser)
-
-### Responsive Design
-- Mobile-first approach with touch-friendly controls
-- Tablet optimization for note-taking scenarios
-- Desktop experience with keyboard shortcuts
-- Adaptive layouts for different screen sizes
-
-## 🔒 Privacy & Security
-
-- **Local Processing**: Audio processing happens in your browser
-- **No Audio Storage**: Recordings are automatically deleted after transcription
-- **Secure API**: Uses HTTPS for all external communications
-- **Privacy First**: No personal data stored or transmitted unnecessarily
-
-## 🚀 Deployment
-
-### Building for Production
+1. Clone the repository:
 ```bash
-npm run build
+git clone <repository-url>
+cd voiceflow
 ```
 
-### Deployment Options
-- **Vercel**: Connect your repository for automatic deployments
-- **Netlify**: Drag and drop the `dist` folder
-- **GitHub Pages**: Use the built-in Pages action
-- **Self-hosted**: Deploy the `dist` folder to any web server
+2. Install dependencies:
+```bash
+npm install
+```
 
-## 🤝 Contributing
+3. Start the development server:
+```bash
+npm run dev
+```
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+4. Open your browser and navigate to `http://localhost:5173`
 
-### Development Guidelines
-- Follow TypeScript best practices
-- Use existing component patterns
-- Maintain responsive design principles
-- Test across multiple browsers
-- Update documentation for new features
+### Configuration
 
-## 📄 License
+1. **API Setup**: Click on "API Settings" in the transcriber page
+2. **Enter your Google Gemini API key**
+3. **Select your preferred model** (Gemini 2.0 Flash recommended)
+4. **Grant microphone permissions** when prompted
 
-This project is open source and available under the [MIT License](LICENSE).
+## Usage
 
-## 🙏 Acknowledgments
+### Basic Workflow
 
-- **Google Gemini AI** for powerful natural language processing
-- **shadcn/ui** for beautiful, accessible components
-- **Tailwind CSS** for efficient styling
-- **Lucide** for consistent iconography
-- **Notion** for design inspiration
+1. **Landing Page**: Start from the beautiful landing page showcasing features
+2. **Start Recording**: Click "Start Recording" to begin live transcription
+3. **Take Notes**: Use the Notes tab to add additional context
+4. **Stop Recording**: Click "Stop" to end the session
+5. **Review Summary**: Get instant AI-generated insights and summaries
+
+### Features in Detail
+
+#### Live Transcription
+- Real-time audio visualization
+- Timestamp-based transcript segments
+- Pause/resume functionality
+- Live status indicators
+
+#### AI Summary Generation
+- Automatic meeting title creation
+- Structured overview and key points
+- Time-based insights showing what happened when
+- Actionable conclusions and next steps
+
+#### Notes Integration
+- Take notes during recording
+- Notes are included in AI summary generation
+- Persistent throughout the session
+
+## API Configuration
+
+### Google Gemini API
+1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Configure in the app settings
+3. Choose from available models:
+   - `gemini-2.0-flash` (Recommended - Fast and efficient)
+   - `gemini-pro` (Standard model)
+   - `gemini-1.5-pro` (Advanced capabilities)
+
+## Browser Compatibility
+
+- **Chrome**: Full support (recommended)
+- **Firefox**: Full support
+- **Safari**: Full support
+- **Edge**: Full support
+
+**Note**: Requires HTTPS for microphone access in production environments.
+
+## Privacy & Security
+
+- **No data storage**: Recordings are processed locally and not saved
+- **API calls**: Only transcript text is sent to Google Gemini for summary generation
+- **Local processing**: Audio processing happens in your browser
+- **User control**: Full control over API keys and data
+
+## Development
+
+### Project Structure
+```
+src/
+├── components/          # Reusable UI components
+├── pages/              # Page components
+├── services/           # API and external services
+├── hooks/              # Custom React hooks
+└── lib/                # Utilities and helpers
+```
+
+### Key Components
+- `Landing.tsx` - Beautiful landing page with feature showcase
+- `Transcriber.tsx` - Main transcription interface
+- `RecordingVisualizer.tsx` - Audio visualization component
+- `ApiSettings.tsx` - API configuration dialog
+- `aiSummaryService.ts` - Google Gemini integration
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, feature requests, or bug reports, please open an issue on the GitHub repository.
 
 ---
 
-**Built with ❤️ for productive meetings and seamless collaboration.**
-
-For support or questions, please open an issue in the repository.
+**VoiceFlow** - Transform your meetings into actionable insights with AI-powered transcription and analysis.

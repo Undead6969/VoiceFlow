@@ -23,7 +23,7 @@ export function RecordingVisualizer({ isRecording, audioStream }: RecordingVisua
     const analyser = audioContext.createAnalyser();
     const source = audioContext.createMediaStreamSource(audioStream);
     
-    analyser.fftSize = 256;
+    analyser.fftSize = 128;
     source.connect(analyser);
     analyserRef.current = analyser;
 
@@ -39,24 +39,24 @@ export function RecordingVisualizer({ isRecording, audioStream }: RecordingVisua
 
       analyserRef.current.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = 'transparent';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const barWidth = (canvas.width / bufferLength) * 2.5;
-      let barHeight;
-      let x = 0;
+      const centerY = canvas.height / 2;
+      const barWidth = 2;
+      const spacing = 1;
+      const maxBars = Math.floor(canvas.width / (barWidth + spacing));
+      
+      for (let i = 0; i < Math.min(bufferLength, maxBars); i++) {
+        const barHeight = (dataArray[i] / 255) * (canvas.height * 0.8);
+        const x = i * (barWidth + spacing) + spacing;
 
-      for (let i = 0; i < bufferLength; i++) {
-        barHeight = (dataArray[i] / 255) * canvas.height;
-
-        const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+        const gradient = ctx.createLinearGradient(0, centerY - barHeight/2, 0, centerY + barHeight/2);
         gradient.addColorStop(0, 'hsl(262.1, 83.3%, 57.8%)');
-        gradient.addColorStop(1, 'hsl(262.1, 83.3%, 47.8%)');
+        gradient.addColorStop(0.5, 'hsl(262.1, 83.3%, 67.8%)');
+        gradient.addColorStop(1, 'hsl(262.1, 83.3%, 57.8%)');
 
         ctx.fillStyle = gradient;
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-
-        x += barWidth + 1;
+        ctx.fillRect(x, centerY - barHeight/2, barWidth, barHeight);
       }
 
       animationFrameRef.current = requestAnimationFrame(draw);
@@ -74,15 +74,16 @@ export function RecordingVisualizer({ isRecording, audioStream }: RecordingVisua
 
   if (!isRecording) {
     return (
-      <div className="h-16 w-full bg-muted rounded-lg flex items-center justify-center">
-        <div className="flex space-x-1">
-          {[...Array(8)].map((_, i) => (
+      <div className="h-10 w-full bg-muted/50 rounded-lg flex items-center justify-center overflow-hidden">
+        <div className="flex space-x-1 items-center">
+          {[...Array(20)].map((_, i) => (
             <div
               key={i}
-              className="w-1 bg-muted-foreground/30 rounded-full"
+              className="w-0.5 bg-muted-foreground/30 rounded-full animate-wave"
               style={{
-                height: `${Math.random() * 20 + 10}px`,
+                height: `${Math.sin(i * 0.5) * 8 + 12}px`,
                 animationDelay: `${i * 0.1}s`,
+                animationDuration: '2s'
               }}
             />
           ))}
@@ -94,9 +95,9 @@ export function RecordingVisualizer({ isRecording, audioStream }: RecordingVisua
   return (
     <canvas
       ref={canvasRef}
-      width={800}
-      height={64}
-      className="w-full h-16 bg-muted rounded-lg"
+      width={600}
+      height={40}
+      className="w-full h-10 bg-muted/50 rounded-lg"
     />
   );
 }

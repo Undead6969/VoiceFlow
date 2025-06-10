@@ -15,12 +15,11 @@ interface SummaryResponse {
   conclusion: string;
 }
 
-const GEMINI_API_KEY = 'AIzaSyB73ozhhHZpLJEvSvktnEMgjRBv8hfhEng';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-
 export async function generateSummary(
   transcriptSegments: TimeStampedText[],
-  notes: string = ''
+  notes: string = '',
+  apiKey: string,
+  model: string = 'gemini-2.0-flash'
 ): Promise<SummaryResponse> {
   const fullTranscript = transcriptSegments.map(segment => 
     `[${formatTimestamp(segment.timestamp)}] ${segment.text}`
@@ -56,7 +55,9 @@ Focus on:
 `;
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,10 +78,17 @@ Focus on:
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    
+    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response format from API');
+    }
+
     const generatedText = data.candidates[0].content.parts[0].text;
     
     // Extract JSON from the response
@@ -96,19 +104,19 @@ Focus on:
     // Fallback summary
     return {
       title: "Meeting Summary",
-      overview: "This meeting covered various topics and discussions.",
+      overview: "This meeting covered various topics and discussions. Unable to generate detailed summary due to API error.",
       keyPoints: [
-        "Key discussion points were covered",
+        "Meeting transcription was completed successfully",
         "Multiple participants contributed to the conversation",
-        "Important decisions were made during the session"
+        "Various topics were discussed during the session"
       ],
       timeBasedInsights: [
         {
           timeRange: "00:00-End",
-          insight: "General discussion and collaboration took place"
+          insight: "General discussion and collaboration took place throughout the meeting"
         }
       ],
-      conclusion: "The meeting concluded with actionable next steps and clear outcomes."
+      conclusion: "The meeting concluded with various points covered. Please check API settings if detailed summary is needed."
     };
   }
 }
