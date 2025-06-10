@@ -1,183 +1,102 @@
 
-# VoiceFlow - AI Meeting Transcriber
+# 🎙️ VoiceFlow - AI Meeting Transcriber
 
-VoiceFlow is a modern web application that provides live audio transcription with AI-powered meeting summaries and intelligent note-taking capabilities.
+Transform your meetings with real-time transcription and intelligent AI summaries powered by Google Gemini.
 
-## Features
+## ✨ Features
 
-### 🎙️ Live Transcription
-- Real-time speech-to-text conversion
-- High accuracy with automatic punctuation
-- Timestamp tracking for every transcript segment
-- Pause and resume functionality
+- **🎯 Live Transcription** - Real-time speech-to-text with high accuracy
+- **🧠 AI Summaries** - Intelligent meeting summaries with key points and insights
+- **📝 Smart Notes** - Seamlessly integrated note-taking
+- **⏰ Timeline Analysis** - Time-based insights of your meetings
+- **💾 Secure Storage** - Save and access your transcriptions anywhere
+- **🔐 Google Authentication** - Secure sign-in with your Google account
+- **🌙 Dark/Light Mode** - Beautiful themes for any preference
+- **📱 Responsive Design** - Works perfectly on all devices
 
-### 🧠 AI-Powered Summaries
-- Automatic meeting title generation
-- Comprehensive meeting overview
-- Key points extraction
-- Time-based insights and analysis
-- Actionable conclusions and next steps
-- Powered by Google Gemini AI
+## 🚀 Getting Started
 
-### 📝 Smart Note-Taking
-- Take notes while recording
-- Notes are integrated into AI summary generation
-- Persistent note storage during sessions
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/voiceflow.git
+   cd voiceflow
+   ```
 
-### 🎨 Modern Interface
-- Beautiful, responsive design
-- Dark/Light theme support
-- Smooth animations and transitions
-- Glass morphism effects
-- Mobile-friendly layout
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### ⚙️ Configurable AI Settings
-- Switch between different Gemini models
-- Custom API key configuration
-- Model selection (Gemini 2.0 Flash, Gemini Pro, etc.)
+3. **Configure Supabase**
+   - Create a new Supabase project
+   - Update the configuration in `src/integrations/supabase/client.ts`
+   - Enable Google OAuth in Supabase Auth settings
 
-## Technology Stack
+4. **Set up Google Gemini API**
+   - Get your API key from Google AI Studio
+   - Configure it in the app's API settings
 
-- **Frontend**: React 18 with TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **UI Components**: Shadcn/ui component library
-- **Audio Processing**: Web Audio API with real-time visualization
-- **Speech Recognition**: Web Speech API
-- **AI Integration**: Google Gemini API
-- **Routing**: React Router v6
-- **State Management**: React hooks
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
+- **AI**: Google Gemini API
+- **Audio**: Web Speech API, MediaRecorder API
+- **UI Components**: shadcn/ui, Radix UI
 - **Build Tool**: Vite
 
-## Getting Started
+## 📖 Usage
 
-### Prerequisites
-- Node.js 18+ and npm/yarn
-- Google Gemini API key
-- Modern web browser with microphone access
+1. **Start Recording** - Click the microphone button to begin live transcription
+2. **Take Notes** - Add your own notes during the meeting
+3. **Get AI Summary** - Automatic intelligent summaries when you stop recording
+4. **Save & Access** - Sign in to save your transcriptions and access them anywhere
+5. **Review History** - Browse your past meetings and transcriptions
 
-### Installation
+## 🔧 Configuration
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd voiceflow
-```
+### API Settings
+- Configure your Google Gemini API key in the profile dropdown
+- Choose from multiple AI models (gemini-2.0-flash, gemini-pro, etc.)
 
-2. Install dependencies:
-```bash
-npm install
-```
+### Authentication
+- Google OAuth integration via Supabase
+- Secure user profiles and data storage
 
-3. Start the development server:
-```bash
-npm run dev
-```
+## 🗄️ Database Schema
 
-4. Open your browser and navigate to `http://localhost:5173`
+The app uses Supabase with the following main tables:
+- `profiles` - User profile information
+- `transcriptions` - Meeting transcripts and summaries
 
-### Configuration
-
-1. **API Setup**: Click on "API Settings" in the transcriber page
-2. **Enter your Google Gemini API key**
-3. **Select your preferred model** (Gemini 2.0 Flash recommended)
-4. **Grant microphone permissions** when prompted
-
-## Usage
-
-### Basic Workflow
-
-1. **Landing Page**: Start from the beautiful landing page showcasing features
-2. **Start Recording**: Click "Start Recording" to begin live transcription
-3. **Take Notes**: Use the Notes tab to add additional context
-4. **Stop Recording**: Click "Stop" to end the session
-5. **Review Summary**: Get instant AI-generated insights and summaries
-
-### Features in Detail
-
-#### Live Transcription
-- Real-time audio visualization
-- Timestamp-based transcript segments
-- Pause/resume functionality
-- Live status indicators
-
-#### AI Summary Generation
-- Automatic meeting title creation
-- Structured overview and key points
-- Time-based insights showing what happened when
-- Actionable conclusions and next steps
-
-#### Notes Integration
-- Take notes during recording
-- Notes are included in AI summary generation
-- Persistent throughout the session
-
-## API Configuration
-
-### Google Gemini API
-1. Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Configure in the app settings
-3. Choose from available models:
-   - `gemini-2.0-flash` (Recommended - Fast and efficient)
-   - `gemini-pro` (Standard model)
-   - `gemini-1.5-pro` (Advanced capabilities)
-
-## Browser Compatibility
-
-- **Chrome**: Full support (recommended)
-- **Firefox**: Full support
-- **Safari**: Full support
-- **Edge**: Full support
-
-**Note**: Requires HTTPS for microphone access in production environments.
-
-## Privacy & Security
-
-- **No data storage**: Recordings are processed locally and not saved
-- **API calls**: Only transcript text is sent to Google Gemini for summary generation
-- **Local processing**: Audio processing happens in your browser
-- **User control**: Full control over API keys and data
-
-## Development
-
-### Project Structure
-```
-src/
-├── components/          # Reusable UI components
-├── pages/              # Page components
-├── services/           # API and external services
-├── hooks/              # Custom React hooks
-└── lib/                # Utilities and helpers
-```
-
-### Key Components
-- `Landing.tsx` - Beautiful landing page with feature showcase
-- `Transcriber.tsx` - Main transcription interface
-- `RecordingVisualizer.tsx` - Audio visualization component
-- `ApiSettings.tsx` - API configuration dialog
-- `aiSummaryService.ts` - Google Gemini integration
-
-### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📜 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 🙏 Acknowledgments
 
-For support, feature requests, or bug reports, please open an issue on the GitHub repository.
+- Google Gemini AI for intelligent summaries
+- Supabase for backend infrastructure
+- shadcn/ui for beautiful UI components
+- Web Speech API for transcription capabilities
+
+## 📞 Support
+
+If you have any questions or need help, please open an issue or contact us at support@voiceflow.app
 
 ---
 
-**VoiceFlow** - Transform your meetings into actionable insights with AI-powered transcription and analysis.
+Made with ❤️ for better meetings and productivity.

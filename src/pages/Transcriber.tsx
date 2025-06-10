@@ -5,13 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { ApiSettings } from '@/components/ApiSettings';
+import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { RecordingVisualizer } from '@/components/RecordingVisualizer';
+import { CopyButton } from '@/components/CopyButton';
+import { LoginDialog } from '@/components/LoginDialog';
+import { HistorySidebar } from '@/components/HistorySidebar';
 import { generateSummary } from '@/services/aiSummaryService';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft, Plus, History } from 'lucide-react';
 
 interface TranscriptSegment {
   text: string;
@@ -42,13 +46,18 @@ const Transcriber = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [apiKey, setApiKey] = useState('AIzaSyB73ozhhHZpLJEvSvktnEMgjRBv8hfhEng');
   const [model, setModel] = useState('gemini-2.0-flash');
+  const [activeTab, setActiveTab] = useState('transcription');
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [currentTranscriptionId, setCurrentTranscriptionId] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +78,18 @@ const Transcriber = () => {
       }
     };
   }, [isRecording, isPaused, recordingStartTime]);
+
+  useEffect(() => {
+    // Load transcription from history if passed via navigation state
+    if (location.state?.loadTranscription) {
+      const transcription = location.state.loadTranscription;
+      setTranscript(transcription.transcript || []);
+      setNotes(transcription.notes || '');
+      setSummary(transcription.summary || null);
+      setMeetingTitle(transcription.title || '');
+      setCurrentTranscriptionId(transcription.id);
+    }
+  }, [location.state]);
 
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -191,7 +212,11 @@ const Transcriber = () => {
     setRecordingStartTime(null);
 
     if (transcript.length > 0) {
+      if (user) {
+        await saveTranscription();
+      }
       await generateMeetingSummary();
+      setActiveTab('summary'); // Auto-navigate to summary tab
     }
 
     toast({
@@ -223,13 +248,90 @@ const Transcriber = () => {
     }
   };
 
+  const saveTranscription = async () => {
+    if (!user) return null;
+
+    const transcriptionData = {
+      user_id: user.id,
+      title: meetingTitle || `Meeting ${new Date().toLocaleDateString()}`,
+      transcript: transcript,
+      notes: notes,
+      summary: summary
+    };
+
+    try {
+      if (currentTranscriptionId) {
+        const { data, error } = await supabase
+          .from('transcriptions')
+          .update(transcriptionData)
+          .eq('id', currentTranscriptionId)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from('transcriptions')
+          .insert(transcriptionData)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        setCurrentTranscriptionId(data.id);
+        return data;
+      }
+    } catch (error) {
+      console.error('Error saving transcription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save transcription",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const startNewRecording = () => {
+    if (transcript.length > 0 && user) {
+      setShowLoginDialog(true);
+      return;
+    }
+    
+    // Reset all state for new recording
+    setTranscript([]);
+    setNotes('');
+    setSummary(null);
+    setMeetingTitle('');
+    setCurrentTranscriptionId(null);
+    setActiveTab('transcription');
+  };
+
+  const handleSelectTranscription = (transcription: any) => {
+    setTranscript(transcription.transcript || []);
+    setNotes(transcription.notes || '');
+    setSummary(transcription.summary || null);
+    setMeetingTitle(transcription.title || '');
+    setCurrentTranscriptionId(transcription.id);
+    setShowHistory(false);
+  };
+
+  const getFullTranscriptText = () => {
+    return transcript.map(segment => segment.text).join(' ');
+  };
+
+  const getFullSummaryText = () => {
+    if (!summary) return '';
+    return `${summary.title}\n\n${summary.overview}\n\nKey Points:\n${summary.keyPoints?.join('\n')}\n\nConclusion:\n${summary.conclusion}`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 font-inter">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 font-inter custom-cursor">
       {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 header-scroll">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="clickable-cursor">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
@@ -251,13 +353,26 @@ const Transcriber = () => {
                 <span className="font-mono">{formatTime(currentTime)}</span>
               </div>
             )}
-            <ApiSettings 
+            
+            {user && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowHistory(true)}
+                className="clickable-cursor"
+              >
+                <History className="w-4 h-4 mr-2" />
+                History
+              </Button>
+            )}
+            
+            <ProfileDropdown 
               apiKey={apiKey}
               model={model}
               onApiKeyChange={setApiKey}
               onModelChange={setModel}
+              onHistoryClick={() => setShowHistory(true)}
             />
-            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -277,49 +392,53 @@ const Transcriber = () => {
             <div className="flex flex-col space-y-4">
               <RecordingVisualizer isRecording={isRecording && !isPaused} audioStream={audioStreamRef.current || undefined} />
               
-              <div className="flex items-center justify-center">
-                <div className="flex items-center space-x-4">
-                  {!isRecording ? (
-                    <Button onClick={startRecording} size="lg" className="bg-primary hover:bg-primary/90">
+              <div className="flex items-center justify-center space-x-4">
+                {!isRecording ? (
+                  <>
+                    <Button onClick={startRecording} size="lg" className="bg-primary hover:bg-primary/90 clickable-cursor">
                       <Mic className="w-4 h-4 mr-2" />
                       Start Recording
                     </Button>
-                  ) : (
-                    <div className="flex space-x-2">
-                      {!isPaused ? (
-                        <Button onClick={pauseRecording} variant="outline" size="lg">
-                          <Pause className="w-4 h-4 mr-2" />
-                          Pause
-                        </Button>
-                      ) : (
-                        <Button onClick={resumeRecording} size="lg" className="bg-green-600 hover:bg-green-700">
-                          <Play className="w-4 h-4 mr-2" />
-                          Resume
-                        </Button>
-                      )}
-                      <Button onClick={stopRecording} variant="destructive" size="lg">
-                        <Square className="w-4 h-4 mr-2" />
-                        Stop
+                    <Button onClick={startNewRecording} variant="outline" size="lg" className="clickable-cursor">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Recording
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex space-x-2">
+                    {!isPaused ? (
+                      <Button onClick={pauseRecording} variant="outline" size="lg" className="clickable-cursor">
+                        <Pause className="w-4 h-4 mr-2" />
+                        Pause
                       </Button>
-                    </div>
-                  )}
-                </div>
+                    ) : (
+                      <Button onClick={resumeRecording} size="lg" className="bg-green-600 hover:bg-green-700 clickable-cursor">
+                        <Play className="w-4 h-4 mr-2" />
+                        Resume
+                      </Button>
+                    )}
+                    <Button onClick={stopRecording} variant="destructive" size="lg" className="clickable-cursor">
+                      <Square className="w-4 h-4 mr-2" />
+                      Stop
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="transcription" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="transcription" className="flex items-center space-x-2">
+            <TabsTrigger value="transcription" className="flex items-center space-x-2 clickable-cursor">
               <FileText className="w-4 h-4" />
               <span>Live Transcription</span>
             </TabsTrigger>
-            <TabsTrigger value="notes">
+            <TabsTrigger value="notes" className="clickable-cursor">
               <span>Notes</span>
             </TabsTrigger>
-            <TabsTrigger value="summary" disabled={!summary && !isGeneratingSummary}>
+            <TabsTrigger value="summary" disabled={!summary && !isGeneratingSummary} className="clickable-cursor">
               <Brain className="w-4 h-4" />
               <span>AI Summary</span>
             </TabsTrigger>
@@ -328,11 +447,16 @@ const Transcriber = () => {
           <TabsContent value="transcription">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="w-5 h-5" />
-                  <span>Live Transcription</span>
-                  {isRecording && !isPaused && <Badge variant="destructive" className="animate-pulse">LIVE</Badge>}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>Live Transcription</span>
+                    {isRecording && !isPaused && <Badge variant="destructive" className="animate-pulse">LIVE</Badge>}
+                  </CardTitle>
+                  {transcript.length > 0 && (
+                    <CopyButton text={getFullTranscriptText()} />
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-96 w-full rounded-md border p-4">
@@ -361,7 +485,10 @@ const Transcriber = () => {
           <TabsContent value="notes">
             <Card>
               <CardHeader>
-                <CardTitle>Meeting Notes</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Meeting Notes</CardTitle>
+                  {notes && <CopyButton text={notes} />}
+                </div>
               </CardHeader>
               <CardContent>
                 <Textarea
@@ -386,6 +513,9 @@ const Transcriber = () => {
                 </Card>
               ) : summary ? (
                 <>
+                  <div className="flex justify-end">
+                    <CopyButton text={getFullSummaryText()} />
+                  </div>
                   {/* Overview */}
                   <Card className="animate-fade-in">
                     <CardHeader>
@@ -462,8 +592,23 @@ const Transcriber = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog 
+        isOpen={showLoginDialog} 
+        onClose={() => setShowLoginDialog(false)} 
+      />
+
+      {/* History Sidebar */}
+      <HistorySidebar
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onSelectTranscription={handleSelectTranscription}
+      />
     </div>
   );
 };
 
 export default Transcriber;
+
+</edits_to_apply>
