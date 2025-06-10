@@ -69,6 +69,39 @@
     @apply bg-background text-foreground font-inter;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+  
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-border;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
 }
 
 @layer components {
@@ -90,11 +123,19 @@
   }
 
   .custom-cursor {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="%236366f1"/><circle cx="12" cy="12" r="1" fill="white"/></svg>'), auto;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="%23ffffff" stroke="%236366f1" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="%236366f1"/></svg>'), auto;
+  }
+
+  .dark .custom-cursor {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="%23000000" stroke="%236366f1" stroke-width="2"/><circle cx="12" cy="12" r="1" fill="%236366f1"/></svg>'), auto;
   }
 
   .clickable-cursor {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="%236366f1"/><circle cx="12" cy="12" r="2" fill="white"/><circle cx="12" cy="12" r="6" stroke="%236366f1" stroke-width="1" fill="none"/></svg>'), pointer !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="%23ffffff" stroke="%236366f1" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="%236366f1"/><circle cx="12" cy="12" r="6" stroke="%236366f1" stroke-width="1" fill="none" opacity="0.5"/></svg>'), pointer !important;
+  }
+
+  .dark .clickable-cursor {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="%23000000" stroke="%236366f1" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="%236366f1"/><circle cx="12" cy="12" r="6" stroke="%236366f1" stroke-width="1" fill="none" opacity="0.5"/></svg>'), pointer !important;
   }
 
   .header-scroll {

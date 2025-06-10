@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft, Plus, History } from 'lucide-react';
+import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft, Plus, History, Menu, X } from 'lucide-react';
 
 interface TranscriptSegment {
   text: string;
@@ -80,7 +81,6 @@ const Transcriber = () => {
   }, [isRecording, isPaused, recordingStartTime]);
 
   useEffect(() => {
-    // Load transcription from history if passed via navigation state
     if (location.state?.loadTranscription) {
       const transcription = location.state.loadTranscription;
       setTranscript(transcription.transcript || []);
@@ -216,7 +216,7 @@ const Transcriber = () => {
         await saveTranscription();
       }
       await generateMeetingSummary();
-      setActiveTab('summary'); // Auto-navigate to summary tab
+      setActiveTab('summary');
     }
 
     toast({
@@ -254,9 +254,9 @@ const Transcriber = () => {
     const transcriptionData = {
       user_id: user.id,
       title: meetingTitle || `Meeting ${new Date().toLocaleDateString()}`,
-      transcript: transcript,
+      transcript: transcript as any,
       notes: notes,
-      summary: summary
+      summary: summary as any
     };
 
     try {
@@ -293,12 +293,11 @@ const Transcriber = () => {
   };
 
   const startNewRecording = () => {
-    if (transcript.length > 0 && user) {
+    if (transcript.length > 0 && !user) {
       setShowLoginDialog(true);
       return;
     }
     
-    // Reset all state for new recording
     setTranscript([]);
     setNotes('');
     setSummary(null);
@@ -327,7 +326,6 @@ const Transcriber = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 font-inter custom-cursor">
-      {/* Header */}
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 header-scroll">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -335,6 +333,16 @@ const Transcriber = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+              className="clickable-cursor"
+            >
+              {showHistory ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
+            
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
                 <Mic className="w-4 h-4 text-white" />
@@ -354,31 +362,17 @@ const Transcriber = () => {
               </div>
             )}
             
-            {user && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowHistory(true)}
-                className="clickable-cursor"
-              >
-                <History className="w-4 h-4 mr-2" />
-                History
-              </Button>
-            )}
-            
             <ProfileDropdown 
               apiKey={apiKey}
               model={model}
               onApiKeyChange={setApiKey}
               onModelChange={setModel}
-              onHistoryClick={() => setShowHistory(true)}
             />
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-6 py-8 max-w-6xl">
-        {/* Meeting Title */}
         {meetingTitle && (
           <div className="mb-6 animate-fade-in">
             <h2 className="text-2xl font-bold text-foreground">{meetingTitle}</h2>
@@ -386,7 +380,6 @@ const Transcriber = () => {
           </div>
         )}
 
-        {/* Recording Controls */}
         <Card className="mb-6 glass-effect">
           <CardContent className="p-6">
             <div className="flex flex-col space-y-4">
@@ -428,7 +421,6 @@ const Transcriber = () => {
           </CardContent>
         </Card>
 
-        {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="transcription" className="flex items-center space-x-2 clickable-cursor">
@@ -516,7 +508,7 @@ const Transcriber = () => {
                   <div className="flex justify-end">
                     <CopyButton text={getFullSummaryText()} />
                   </div>
-                  {/* Overview */}
+                  
                   <Card className="animate-fade-in">
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
@@ -529,7 +521,6 @@ const Transcriber = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Key Points */}
                   <Card className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
@@ -549,7 +540,6 @@ const Transcriber = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Time-based Insights */}
                   <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
@@ -569,7 +559,6 @@ const Transcriber = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Conclusion */}
                   <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
                     <CardHeader>
                       <CardTitle>Conclusion & Next Steps</CardTitle>
@@ -593,13 +582,11 @@ const Transcriber = () => {
         </Tabs>
       </div>
 
-      {/* Login Dialog */}
       <LoginDialog 
         isOpen={showLoginDialog} 
         onClose={() => setShowLoginDialog(false)} 
       />
 
-      {/* History Sidebar */}
       <HistorySidebar
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}

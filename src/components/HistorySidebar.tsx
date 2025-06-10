@@ -12,7 +12,7 @@ interface Transcription {
   id: string;
   title: string;
   created_at: string;
-  transcript: any[];
+  transcript: any;
   notes: string;
   summary: any;
 }
@@ -47,7 +47,17 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTranscriptions(data || []);
+      
+      const formattedData = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        created_at: item.created_at,
+        transcript: Array.isArray(item.transcript) ? item.transcript : [],
+        notes: item.notes || '',
+        summary: typeof item.summary === 'object' ? item.summary : null
+      }));
+      
+      setTranscriptions(formattedData);
     } catch (error) {
       console.error('Error fetching transcriptions:', error);
       toast({
@@ -133,7 +143,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     </div>
                     <div className="flex items-center space-x-2 mt-2">
                       <Badge variant="outline" className="text-xs">
-                        {transcription.transcript?.length || 0} segments
+                        {Array.isArray(transcription.transcript) ? transcription.transcript.length : 0} segments
                       </Badge>
                       {transcription.summary && (
                         <Badge variant="secondary" className="text-xs">

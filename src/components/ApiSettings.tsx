@@ -16,8 +16,8 @@ interface ApiSettingsProps {
 
 const AVAILABLE_MODELS = [
   { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (Recommended)' },
-  { value: 'gemini-pro', label: 'Gemini Pro' },
-  { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+  { value: 'gemini-2.5-pro-preview-06-05', label: 'Gemini 2.5 Pro Preview' },
+  { value: 'gemini-2.5-flash-preview-05-20', label: 'Gemini 2.5 Flash Preview 05-20' },
 ];
 
 export function ApiSettings({ apiKey, model, onApiKeyChange, onModelChange }: ApiSettingsProps) {
