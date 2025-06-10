@@ -610,5 +610,3 @@ const Transcriber = () => {
 };
 
 export default Transcriber;
-
-</edits_to_apply>
