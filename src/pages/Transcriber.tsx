@@ -11,10 +11,12 @@ import { RecordingVisualizer } from '@/components/RecordingVisualizer';
 import { CopyButton } from '@/components/CopyButton';
 import { LoginDialog } from '@/components/LoginDialog';
 import { HistorySidebar } from '@/components/HistorySidebar';
+import { SummaryChatbot } from '@/components/SummaryChatbot';
 import { generateSummary } from '@/services/aiSummaryService';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { Mic, MicOff, Square, Play, Pause, FileText, Brain, Clock, Target, Lightbulb, ArrowLeft, Plus, History, Menu, X } from 'lucide-react';
 
@@ -46,10 +48,10 @@ const Transcriber = () => {
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [apiKey, setApiKey] = useState('AIzaSyB73ozhhHZpLJEvSvktnEMgjRBv8hfhEng');
-  const [model, setModel] = useState('gemini-2.0-flash');
+  const [model, setModel] = useState('gemini-2.5-flash');
   const [activeTab, setActiveTab] = useState('transcription');
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [currentTranscriptionId, setCurrentTranscriptionId] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -59,6 +61,7 @@ const Transcriber = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { saveTranscription: saveLocalTranscription, updateTranscription: updateLocalTranscription } = useLocalStorage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -212,9 +215,7 @@ const Transcriber = () => {
     setRecordingStartTime(null);
 
     if (transcript.length > 0) {
-      if (user) {
-        await saveTranscription();
-      }
+      await saveTranscription();
       await generateMeetingSummary();
       setActiveTab('summary');
     }
@@ -249,37 +250,54 @@ const Transcriber = () => {
   };
 
   const saveTranscription = async () => {
-    if (!user) return null;
-
     const transcriptionData = {
-      user_id: user.id,
       title: meetingTitle || `Meeting ${new Date().toLocaleDateString()}`,
-      transcript: transcript as any,
+      transcript: transcript,
       notes: notes,
-      summary: summary as any
+      summary: summary
     };
 
     try {
-      if (currentTranscriptionId) {
-        const { data, error } = await supabase
-          .from('transcriptions')
-          .update(transcriptionData)
-          .eq('id', currentTranscriptionId)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
+      if (user) {
+        // Authenticated user - save to Supabase
+        const supabaseData = {
+          ...transcriptionData,
+          user_id: user.id,
+          transcript: transcript as any,
+          summary: summary as any
+        };
+
+        if (currentTranscriptionId) {
+          const { data, error } = await supabase
+            .from('transcriptions')
+            .update(supabaseData)
+            .eq('id', currentTranscriptionId)
+            .select()
+            .single();
+          
+          if (error) throw error;
+          return data;
+        } else {
+          const { data, error } = await supabase
+            .from('transcriptions')
+            .insert(supabaseData)
+            .select()
+            .single();
+          
+          if (error) throw error;
+          setCurrentTranscriptionId(data.id);
+          return data;
+        }
       } else {
-        const { data, error } = await supabase
-          .from('transcriptions')
-          .insert(transcriptionData)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        setCurrentTranscriptionId(data.id);
-        return data;
+        // Guest user - save to localStorage
+        if (currentTranscriptionId) {
+          updateLocalTranscription(currentTranscriptionId, transcriptionData);
+          return { id: currentTranscriptionId };
+        } else {
+          const newId = saveLocalTranscription(transcriptionData);
+          setCurrentTranscriptionId(newId);
+          return { id: newId };
+        }
       }
     } catch (error) {
       console.error('Error saving transcription:', error);
@@ -293,11 +311,6 @@ const Transcriber = () => {
   };
 
   const startNewRecording = () => {
-    if (transcript.length > 0 && !user) {
-      setShowLoginDialog(true);
-      return;
-    }
-    
     setTranscript([]);
     setNotes('');
     setSummary(null);
@@ -338,9 +351,9 @@ const Transcriber = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setShowHistory(!showHistory)}
-              className="clickable-cursor"
+              className="clickable-cursor transition-all duration-200 hover:scale-105"
             >
-              {showHistory ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              <History className="w-4 h-4" />
             </Button>
             
             <div className="flex items-center space-x-3">
@@ -422,7 +435,7 @@ const Transcriber = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${summary ? 'grid-cols-4' : 'grid-cols-3'} transition-all duration-300`}>
             <TabsTrigger value="transcription" className="flex items-center space-x-2 clickable-cursor">
               <FileText className="w-4 h-4" />
               <span>Live Transcription</span>
@@ -434,6 +447,11 @@ const Transcriber = () => {
               <Brain className="w-4 h-4" />
               <span>AI Summary</span>
             </TabsTrigger>
+            {summary && (
+              <TabsTrigger value="chat" className="clickable-cursor animate-fade-in">
+                <span>Chat</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="transcription">
@@ -578,6 +596,17 @@ const Transcriber = () => {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="chat">
+            {summary && (
+              <SummaryChatbot 
+                summary={summary}
+                transcript={transcript}
+                notes={notes}
+                apiKey={apiKey}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>

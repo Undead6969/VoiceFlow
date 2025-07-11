@@ -19,7 +19,7 @@ export async function generateSummary(
   transcriptSegments: TimeStampedText[],
   notes: string = '',
   apiKey: string,
-  model: string = 'gemini-2.0-flash'
+  model: string = 'gemini-2.5-flash'
 ): Promise<SummaryResponse> {
   const fullTranscript = transcriptSegments.map(segment => 
     `[${formatTimestamp(segment.timestamp)}] ${segment.text}`

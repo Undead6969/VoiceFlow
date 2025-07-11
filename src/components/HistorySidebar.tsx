@@ -5,7 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Trash2, Calendar } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { FileText, Trash2, Calendar, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Transcription {
@@ -31,13 +32,20 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { localTranscriptions, deleteTranscription: deleteLocalTranscription } = useLocalStorage();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user && isOpen) {
-      fetchTranscriptions();
+    if (isOpen) {
+      if (user) {
+        fetchTranscriptions();
+      } else {
+        // For guest users, use local storage
+        setTranscriptions(localTranscriptions);
+        setLoading(false);
+      }
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, localTranscriptions]);
 
   const fetchTranscriptions = async () => {
     try {
@@ -72,14 +80,20 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
 
   const deleteTranscription = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('transcriptions')
-        .delete()
-        .eq('id', id);
+      if (user) {
+        const { error } = await supabase
+          .from('transcriptions')
+          .delete()
+          .eq('id', id);
 
-      if (error) throw error;
+        if (error) throw error;
+        setTranscriptions(prev => prev.filter(t => t.id !== id));
+      } else {
+        // Guest user - delete from local storage
+        deleteLocalTranscription(id);
+        setTranscriptions(prev => prev.filter(t => t.id !== id));
+      }
 
-      setTranscriptions(prev => prev.filter(t => t.id !== id));
       toast({
         title: "Deleted",
         description: "Transcription deleted successfully",
@@ -106,11 +120,15 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed left-0 top-0 h-full w-80 bg-background border-r shadow-lg z-40 transition-transform duration-300">
-      <div className="p-4 border-b">
+    <div className={`fixed left-0 top-0 h-full w-80 bg-background/95 backdrop-blur-sm border-r shadow-xl z-40 transition-all duration-300 ease-in-out ${
+      isOpen ? 'translate-x-0' : '-translate-x-full'
+    }`}>
+      <div className="p-4 border-b bg-background/80">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Transcription History</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
+          <h2 className="text-lg font-semibold">History</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-muted/50 transition-colors">
+            <X className="w-4 h-4" />
+          </Button>
         </div>
       </div>
       
@@ -129,7 +147,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
             transcriptions.map((transcription) => (
               <div
                 key={transcription.id}
-                className="p-3 rounded-lg border hover:bg-muted/50 cursor-pointer group"
+                className="p-3 rounded-lg border hover:bg-muted/50 cursor-pointer group transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
                 onClick={() => onSelectTranscription(transcription)}
               >
                 <div className="flex items-start justify-between">
@@ -155,7 +173,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-destructive/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteTranscription(transcription.id);
